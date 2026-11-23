@@ -1,0 +1,92 @@
+lasifikasi dan Clustering Tiga Kultivar Anggur (Vitis vinifera) Berdasarkan Profil Kimia Menggunakan Pendekatan Machine Learning
+
+1. Ringkasan Proyek
+
+Proyek ini berfokus pada pemodelan dan analisis karakteristik fitokimia serta komposisi kimia dari tiga kultivar anggur (Vitis vinifera) menggunakan metode Machine Learning 
+(ML). Analisis memanfaatkan dataset Wine klasik dari UCI Machine Learning Repository yang memuat 13 parameter pengukuran kimia.
+
+Pendekatan yang diterapkan memadukan dua paradigma utama:
+Supervised Learning: Membangun model prediktif untuk mengklasifikasikan kultivar anggur berdasarkan profil kimianya serta membandingkan performanya terhadap baseline.
+Unsupervised Learning: Mengeksplorasi struktur pengelompokan alami sampel tanpa menggunakan label kultivar melalui reduksi dimensi dan algoritma klasterisasi.
+
+2. Tujuan Analisis
+
+Mengklasifikasikan tiga kelompok kultivar anggur berdasarkan 13 atribut profil kimianya.
+Mengevaluasi dan membandingkan performa algoritma Logistic Regression, Random Forest, dan Support Vector Machine (SVM) terhadap model baseline dengan validasi bebas data leakage.
+Mengidentifikasi pola pengelompokan intrinsik menggunakan Principal Component Analysis (PCA), K-Means, dan Hierarchical Clustering, lalu mengukur kesesuaiannya dengan label asli.
+Menentukan senyawa atau parameter kimia yang paling berpengaruh dalam membedakan tiap kultivar anggur.
+
+3. Dataset Penelitian
+
+Dataset bersumber dari UCI Machine Learning Repository (dikumpulkan oleh M. Forina dkk.) yang diakses melalui fungsi load_wine pada pustaka scikit-learn.
+Total data terdiri atas 178 sampel lengkap (tanpa missing value) yang terbagi ke dalam tiga kelas target:
+Kultivar 1: 59 sampel
+Kultivar 2: 71 sampel
+Kultivar 3: 48 sampel
+
+Rincian 13 Variabel Prediktor (Numerik Kontinu):
+Alkohol & Asam (alcohol, malic_acid): Kadar etanol dan asam malat yang memengaruhi rasa serta fermentasi.
+Mineral & Abu (ash, alcalinity_of_ash, magnesium): Kandungan mineral anorganik dan tingkat alkalinitas abu.
+Senyawa Fenolik (total_phenols, flavanoids, nonflavanoid_phenols, proanthocyanins): Metabolit sekunder penentu aktivitas antioksidan, rasa sepat, dan warna.
+Spektrum Warna & Optik (color_intensity, hue, od280/od315_of_diluted_wines): Intensitas pigmen, rona warna, serta rasio absorbansi UV pengenceran anggur.
+Asam Amino (proline): Asam amino bebas utama yang menjadi penanda kematangan dan kultivar.   
+
+Sumber Dataset: sklearn.datasets.load_wine() / [UCI Machine Learning Repository - Wine Dataset](https://archive.ics.uci.edu/dataset/109/wine)
+
+4. Metodologi Machine Learning
+
+A. Pembelajaran Terawasi (Supervised Learning)
+Strategi Pembagian & Praproses: Data dibagi secara berstrata (Stratified split) menjadi 80% data latih (142 sampel) dan 20% data uji (36 sampel) menggunakan random_state=42.Standardisasi fitur (StandardScaler) dibungkus di dalam Pipelin agar parameter skala hanya dihitung dari data latih untuk mencegah data leakage.
+Pemodelan & Optimasi: Membandingkan DummyClassifier (baseline), Logistic Regression, Random Forest (300 pohon), dan SVM (RBF) menggunakan 5-fold Stratified Cross-Validation. Model terbaik (SVM) dioptimasi lebih lanjut menggunakan GridSearchCV (menghasilkan konfigurasi optimal C=100, gamma=0,01).
+Metrik Evaluasi: Mengutamakan F1-macro untuk keseimbangan antarkelas, dilengkapi dengan Accuracy, Precision, Recall, Confusion Matrix, kurva ROC-AUC (One-vs-Rest), serta uji kewajaran (label randomization dan bootstrap 95% CI).
+
+B. Pembelajaran Tanpa Pengawasan (Unsupervised Learning)
+Reduksi Dimensi: Menggunakan PCA pada seluruh 178 sampel tanpa label untuk mereduksi 13 fitur menjadi komponen utama (PC1 dan PC2 menyumbang 55,4% variansi kumulatif) serta memetakan loading plot fitur.
+Klasterisasi: Penentuan jumlah klaster optimal (K=3) dievaluasi melalui Elbow Method dan Silhouette Score. Pengelompokan utama memakai K-Means (K=3, n_init=10) dan dibandingkan dengan Hierarchical Clustering (metode Ward).
+Validasi Eksternal: Kesesuaian hasil klaster terhadap label kultivar asli diukur menggunakan Adjusted Rand Index (ARI = 0,897 pada K-Means) dan Normalized Mutual Information (NMI = 0,876).
+
+5. Alur Kerja Notebook Analisis
+
+Struktur kode pada notebook dirancang secara sistematis dalam 8 tahap berurutan:
+1. Inisialisasi & Impor Pustaka: Memuat modul pengolahan data, statistik, visualisasi, dan pemodelan ML dengan random_state=42.
+2. Akuisisi & Inspeksi Data: Memuat dataset Wine dan memverifikasi kelengkapan 178 sampel beserta distribusi ketiga kultivar.
+3. Eksplorasi Data (EDA): Menganalisis sebaran fitur per kultivar (boxplot), korelasi multikolinearitas (heatmap Pearson), dan uji ANOVA F awal.
+4. Pemisahan Data & Konstruksi Pipeline: Menerapkan stratified train-test split (80:20) dan menyiapkan Pipeline standardisasi fitur.
+5. Pelatihan & Tuning Supervised Learning: Melakukan validasi silang 5-fold pada empat algoritma, melakukan hyperparameter tuning SVM, serta mengevaluasi kinerja akhir pada 36 data uji.
+6. Uji Kewajaran & Interpretasi Fitur: Menjalankan uji bootstrap, pengacakan label, serta menggabungkan peringkat kepentingan fitur dari ANOVA F, Random Forest, koefisien Logistic Regression, dan Permutation Importance SVM.
+7. Analisis Unsupervised (PCA & Clustering): Melakukan proyeksi PCA 2D, penentuan nilai K optimal (Elbow & Silhouette), serta klasterisasi K-Means dan Hierarchical Clustering.
+8. Sintesis & Kesimpulan Biologis: Merangkum temuan performa model dan mengaitkan fitur kimia utama (flavanoids, proline, alcohol, color_intensity, od280/od315) dengan literatur biologi tanaman anggur.
+
+6. Perangkat & Pustaka Python
+
+Lingkungan pengembangan menggunakan Python 3 dengan ekosistem pustaka berikut:
+Pandas & NumPy: Manipulasi struktur data tabular dan komputasi matriks numerik.
+Scikit-learn: Praproses (StandardScaler, Pipeline), algoritma klasifikasi, validasi silang, GridSearchCV, PCA, K-Means, dan metrik evaluasi.
+SciPy: Implementasi Hierarchical Clustering (metode Ward) dan visualisasi dendrogram.
+Matplotlib & Seaborn: Pembuatan grafik distribusi (oxplot), heatmap korelasi, kurva ROC, plot PCA 2D, dan confusion matrix.
+
+7. Panduan Menjalankan Proyek
+
+Seluruh eksperimen dapat direproduksi secara langsung melalui Google Colab atau Jupyter Notebook tanpa konfigurasi rumit:
+1. Unggah dan buka berkas notebook (.ipynb) di lingkungan Google Colab.
+2. Pastikan koneksi internet aktif atau pustaka scikit-learn sudah terpasang untuk memuat fungsi load_wine() secara otomatis.
+3. Jalankan setiap blok kode (cell) secara berurutan dari atas ke bawah agar variabel pipeline dan pembagian data tetap konsisten.
+4. Tinjau narasi Markdown di setiap bagian untuk memahami alasan pemilihan metode serta batasan analisis.
+5. Periksa hasil output berupa tabel perbandingan metrik, grafik PCA/klasterisasi, serta peringkat fitur penting.
+
+8. Luaran (Deliverables) Proyek
+
+Hasil akhir yang dihasilkan dari rangkaian analisis ini mencakup:
+Notebook Analisis Terstruktur (.ipynb) yang memuat alur kerja end-to-end bebas data leakage.
+Laporan Komparasi Model Klasifikasi (Baseline, Logistic Regression, Random Forest, dan SVM Tuned dengan akurasi uji 97,2%).
+Evaluasi Diagnostik Model: Confusion Matrix, kurva ROC-AUC, dan interval kepercayaan bootstrap.
+Peta Visualisasi Unsupervised: Grafik proyeksi PCA 2D, loading plot, kurva Elbow/Silhouette, serta dendrogram Hierarchical Clustering.
+Analisis Peringkat Senyawa Biomarker yang membedakan karakteristik kimia ketiga kultivar anggur.
+
+9. Tim Penyusun
+
+Proyek ini disusun oleh Kelompok 4 sebagai bagian dari laporan Mini Project Data Sains dan Artificial Intelligence, Program Studi Biologi Terapan, Fakultas Biologi, Universitas Jenderal Soedirman (2026):
+1. Muhammad Ilham Hakim I.H. (B1C024043)
+2. Putri Setyawati (B1C024047)
+3. Khalishah Nur Awalin (B1C024050)
+4. Natasya Kinshi Rinjani (B1C024052)
